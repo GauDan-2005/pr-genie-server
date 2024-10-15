@@ -24,7 +24,11 @@ const userControllers = {
         headers: { Authorization: `Bearer ${user.token}` },
       });
 
-      res.json(response.data);
+      const ownedRepos = response.data.filter(
+        (repo) => repo.owner.login === user.username
+      );
+
+      res.json(ownedRepos);
     } catch (err) {
       res.status(500).json({ message: "Error fetching repositories" });
     }

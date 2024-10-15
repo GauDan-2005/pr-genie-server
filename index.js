@@ -12,7 +12,14 @@ connectDB();
 
 const app = express();
 app.use(express.json());
-app.use(cors());
+
+const corsOptions = {
+  origin: process.env.CLIENT_URL, // Allow your frontend origin
+  credentials: true, // Allow credentials (cookies)
+};
+
+app.use(cors(corsOptions));
+
 // Session Middleware
 app.use(
   session({
