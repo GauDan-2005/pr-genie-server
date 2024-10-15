@@ -14,15 +14,28 @@ router.get(
   })
 );
 
-router.get(
-  "/github/callback",
-  passport.authenticate("github", {
-    failureRedirect: "/",
-  }),
-  (req, res) => {
-    res.redirect(`/dashboard`);
+router.get("/github/callback", async (req, res) => {
+  const code = req.query.code;
+  try {
+    const tokenResponse = await axios.post(
+      "https://github.com/login/oauth/access_token",
+      {
+        client_id: process.env.GITHUB_CLIENT_ID,
+        client_secret: process.env.GITHUB_CLIENT_SECRET,
+        code: code,
+      },
+      {
+        headers: { Accept: "application/json" },
+      }
+    );
+
+    const accessToken = tokenResponse.data.access_token;
+
+    res.status(200).redirect("/dashboard");
+  } catch (error) {
+    res.status(500).send("Authentication failed");
   }
-);
+});
 
 router.get("/user", (req, res) => {
   if (req.user) {
