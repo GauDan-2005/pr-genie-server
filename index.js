@@ -25,7 +25,7 @@ app.use(
     secret: process.env.SESSION_SECRET || "your-session-secret",
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: true },
+    cookie: { secure: false },
     sameSite: "none",
     maxAge: 10 * 24 * 60 * 60 * 1000, // 10 day
   })
