@@ -1,11 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const passport = require("passport");
-const cors = require("cors");
-const corsOptions = {
-  origin: process.env.CLIENT_URL, // Allow your frontend origin
-  credentials: true, // Allow credentials (cookies)
-};
 
 router.get(
   "/github",
@@ -32,7 +27,7 @@ router.get("/user", (req, res) => {
   }
 });
 
-router.get("/logout", cors(corsOptions), (req, res) => {
+router.get("/logout", (req, res) => {
   req.logout((err) => {
     if (err) {
       return res
