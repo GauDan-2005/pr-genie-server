@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const passport = require("passport");
+const ensureAuthenticated = require("../middlewares/authMiddleware");
 
 router.get(
   "/github",
@@ -14,20 +15,20 @@ router.get(
   passport.authenticate("github", { failureRedirect: "/failed" }),
   async (req, res) => {
     // Authentication successful
+    console.log("calback: ", req.user);
+
     if (req.user) {
       res.status(200).redirect(`${process.env.CLIENT_URL}/dashboard`);
     } else {
-      res
-        .status(401)
-        .json({ message: "Authentication failed, no user found." })
-        .redirect(`${process.env.CLIENT_URL}/login`);
+      res.status(401).redirect(`${process.env.CLIENT_URL}/login`);
     }
   }
 );
 
-router.get("/user", (req, res) => {
+router.get("/user", ensureAuthenticated, async (req, res) => {
   if (req.user) {
-    res.status(200).redirect(`${process.env.CLIENT_URL}/dashboard`);
+    console.log(req.user);
+    res.status(200).json(req.user);
   } else {
     res.status(401).json("Cookies not found");
   }

@@ -14,8 +14,8 @@ const app = express();
 app.use(express.json());
 
 const corsOptions = {
-  origin: process.env.CLIENT_URL, // Allow your frontend origin
-  credentials: true, // Allow credentials (cookies)
+  origin: [process.env.CLIENT_URL, "https://github.com"],
+  credentials: true,
 };
 app.use(cors(corsOptions));
 
@@ -26,8 +26,8 @@ app.use(
     resave: false,
     saveUninitialized: true,
     cookie: {
-      secure: true,
-      sameSite: "none",
+      secure: false,
+      // sameSite: "none",
       httpOnly: true,
       maxAge: 10 * 24 * 60 * 60 * 1000, // 10 days
     },
@@ -39,6 +39,11 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // Routes
+app.use((req, res, next) => {
+  console.log(`Incoming request: ${req.method} ${req.url}`);
+  next();
+});
+
 app.use("/auth", require("./routes/auth"));
 app.use("/webhooks", require("./routes/webhook"));
 app.use("/user", require("./routes/user"));
