@@ -26,6 +26,7 @@ app.use(
     resave: false,
     saveUninitialized: true,
     cookie: { secure: true },
+    maxAge: 10 * 24 * 60 * 60 * 1000, // 10 day
   })
 );
 
