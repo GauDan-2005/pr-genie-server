@@ -12,26 +12,24 @@ router.get(
 router.get(
   "/github/callback",
   passport.authenticate("github", { failureRedirect: "/failed" }),
-  async (req, res, next) => {
+  async (req, res) => {
     // Authentication successful
     if (req.user) {
-      next();
-      res
-        .status(200)
-        .json({ message: "Authentication successful", user: req.user });
+      res.status(200).redirect(`${process.env.CLIENT_URL}/dashboard`);
     } else {
       res
         .status(401)
-        .json({ message: "Authentication failed, no user found." });
+        .json({ message: "Authentication failed, no user found." })
+        .redirect(`${process.env.CLIENT_URL}/login`);
     }
   }
 );
 
 router.get("/user", (req, res) => {
   if (req.user) {
-    res.json({ user: req.user });
+    res.status(200).redirect(`${process.env.CLIENT_URL}/dashboard`);
   } else {
-    res.status(401).json({ error: "Not authenticated" });
+    res.status(401).json("Cookies not found");
   }
 });
 
