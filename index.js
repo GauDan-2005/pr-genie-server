@@ -22,12 +22,15 @@ app.use(cors(corsOptions));
 // Session Middleware
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || "your-session-secret",
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false },
-    sameSite: "none",
-    maxAge: 10 * 24 * 60 * 60 * 1000, // 10 day
+    cookie: {
+      secure: true,
+      sameSite: "none",
+      httpOnly: true,
+      maxAge: 10 * 24 * 60 * 60 * 1000, // 10 days
+    },
   })
 );
 
