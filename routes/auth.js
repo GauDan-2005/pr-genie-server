@@ -18,7 +18,9 @@ router.get(
   "/github/callback",
   passport.authenticate("github", { failureRedirect: "/failed" }),
   async (req, res) => {
-    res.status(200).json({ message: "Authentication successful", accessToken });
+    res
+      .status(200)
+      .json({ message: "Authentication successful", user: req.user });
   }
 );
 
