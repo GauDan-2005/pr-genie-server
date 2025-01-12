@@ -13,8 +13,19 @@ connectDB();
 const app = express();
 app.use(express.json());
 
+const allowedOrigins = [process.env.CLIENT_URL, "https://github.com"];
 const corsOptions = {
-  origin: [process.env.CLIENT_URL, "https://github.com"],
+  origin: function (origin, callback) {
+    // Check if origin is in the allowed list or matches a specific pattern
+    if (
+      !origin ||
+      allowedOrigins.some((allowed) => origin.startsWith(allowed))
+    ) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true,
 };
 app.use(cors(corsOptions));
