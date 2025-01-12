@@ -14,7 +14,8 @@ const app = express();
 app.use(express.json());
 
 const corsOptions = {
-  origin: "*",
+  origin: [process.env.CLIENT_URL, "https://github.com"],
+  credentials: true,
 };
 app.use(cors(corsOptions));
 
