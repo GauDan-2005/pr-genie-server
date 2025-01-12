@@ -14,8 +14,7 @@ const app = express();
 app.use(express.json());
 
 const corsOptions = {
-  origin: [process.env.CLIENT_URL, "https://github.com"],
-  credentials: true,
+  origin: "*",
 };
 app.use(cors(corsOptions));
 
@@ -26,8 +25,8 @@ app.use(
     resave: false,
     saveUninitialized: true,
     cookie: {
-      secure: true,
-      sameSite: "none",
+      secure: false,
+      // sameSite: "none",
       httpOnly: true,
       maxAge: 10 * 24 * 60 * 60 * 1000, // 10 days
     },
