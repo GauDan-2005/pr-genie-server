@@ -12,13 +12,19 @@ router.get(
 
 router.get(
   "/github/callback",
-  passport.authenticate("github", { failureRedirect: "/failed" }),
+  passport.authenticate("github", { failureRedirect: "/" }),
   async (req, res) => {
     // Authentication successful
     console.log("calback: ", req.user);
 
     if (req.user) {
-      res.status(200).redirect(`${process.env.CLIENT_URL}/dashboard`);
+      res
+        .status(200)
+        .redirect(
+          `${
+            process.env.CLIENT_URL || "https://prgenie.netlify.app/login"
+          }/dashboard`
+        );
     } else {
       res.status(401).redirect(`${process.env.CLIENT_URL}/login`);
     }

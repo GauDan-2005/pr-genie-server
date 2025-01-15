@@ -13,7 +13,11 @@ connectDB();
 const app = express();
 app.use(express.json());
 
-const allowedOrigins = [process.env.CLIENT_URL, "https://github.com"];
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  "https://github.com",
+  "https://prgenie.netlify.app",
+];
 const corsOptions = {
   origin: function (origin, callback) {
     // Check if origin is in the allowed list or matches a specific pattern
@@ -26,9 +30,12 @@ const corsOptions = {
       callback(new Error("Not allowed by CORS"));
     }
   },
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   credentials: true,
 };
 app.use(cors(corsOptions));
+
+app.options("*", cors());
 
 // Session Middleware
 app.use(
