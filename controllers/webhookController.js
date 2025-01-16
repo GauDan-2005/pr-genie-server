@@ -6,7 +6,7 @@ const webHookeControllers = {
   // Create a webhook for a repository to track pull requests
   createWebhook: async (req, res) => {
     const { repo } = req.body;
-    const user = req.user;
+    const user = await User.findById(req.user);
 
     console.log(
       `Creating webhook for repo: ${repo} with owner: ${user.username}`
@@ -50,6 +50,7 @@ const webHookeControllers = {
 
     try {
       if (action === "opened") {
+        console.log(repository);
         const username = repository.owner.login;
         const user = await User.findOne({ username });
 

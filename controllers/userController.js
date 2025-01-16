@@ -15,10 +15,8 @@ const userControllers = {
     }
   },
   getUserComments: async (req, res) => {
-    const userId = req.user._id;
-
     try {
-      const user = await User.findById(userId);
+      const user = await User.findById(req.user);
       if (user) {
         return res.json(user.aiComments); // Return the list of AI comments
       }

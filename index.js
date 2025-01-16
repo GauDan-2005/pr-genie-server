@@ -4,7 +4,6 @@ const express = require("express");
 const session = require("express-session");
 const connectDB = require("./db/config/db");
 const cors = require("cors");
-// require("./config/passportConfig");
 const { PassportOAuth } = require("./utils/passport");
 const GitHubStrategy = require("./utils/GithubStrategy");
 
