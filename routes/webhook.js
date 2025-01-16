@@ -5,8 +5,9 @@ const {
   createWebhook,
   handlePullRequest,
 } = require("../controllers/webhookController");
+const { verify } = require("../controllers/authControllers");
 
-router.post("/create-webhook", ensureAuthenticated, createWebhook);
+router.post("/create-webhook", verify, createWebhook);
 router.post("/pull-request", handlePullRequest);
 
 module.exports = router;
