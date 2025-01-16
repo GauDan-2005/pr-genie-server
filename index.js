@@ -1,11 +1,12 @@
 require("dotenv").config();
 
 const express = require("express");
-const passport = require("passport");
 const session = require("express-session");
 const connectDB = require("./db/config/db");
 const cors = require("cors");
-require("./config/passportConfig");
+// require("./config/passportConfig");
+const { PassportOAuth } = require("./utils/passport");
+const GitHubStrategy = require("./utils/GithubStrategy");
 
 // DB Connection
 connectDB();
@@ -17,44 +18,31 @@ const allowedOrigins = [
   process.env.CLIENT_URL,
   "https://github.com",
   "https://prgenie.netlify.app",
+  "http://localhost:5173",
 ];
 const corsOptions = {
-  origin: function (origin, callback) {
-    // Check if origin is in the allowed list or matches a specific pattern
-    if (
-      !origin ||
-      allowedOrigins.some((allowed) => origin.startsWith(allowed))
-    ) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
+  origin: allowedOrigins,
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   credentials: true,
 };
 app.use(cors(corsOptions));
 
-app.options("*", cors());
+// app.options("*", cors());
 
 // Session Middleware
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
     resave: false,
-    saveUninitialized: true,
-    cookie: {
-      secure: false,
-      // sameSite: "none",
-      httpOnly: true,
-      maxAge: 10 * 24 * 60 * 60 * 1000, // 10 days
-    },
+    saveUninitialized: false,
   })
 );
 
 // Initialize Passport
-app.use(passport.initialize());
-app.use(passport.session());
+app.use(PassportOAuth.initialize());
+app.use(PassportOAuth.session());
+
+PassportOAuth.use(GitHubStrategy);
 
 // Routes
 app.use((req, res, next) => {

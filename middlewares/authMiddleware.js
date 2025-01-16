@@ -1,9 +1,12 @@
 // authMiddleware.js
-const ensureAuthenticated = (req, res, next) => {
+const ensureAuthenticated = async (req, res, next) => {
+  console.log("user demand - authentication middleware");
+  // console.log(await req.isAuthenticated());
   if (req.isAuthenticated()) {
+    console.log("User Authenticated");
     return next();
   }
-  res.redirect("/auth/github"); // Redirect to GitHub login if not authenticated
+  return res.send("Not logged in, Please log in again.");
 };
 
 module.exports = ensureAuthenticated;

@@ -12,12 +12,12 @@ const userSchema = new mongoose.Schema(
     githubId: { type: String, required: true, unique: true },
     username: { type: String },
     name: { type: String },
-    login: { type: String },
     avatarUrl: { type: String },
     htmlUrl: { type: String },
     publicRepos: { type: Number },
     token: { type: String },
     aiComments: [aiCommentSchema],
+    profileUrl: { type: String },
   },
   { timestamps: true }
 );
