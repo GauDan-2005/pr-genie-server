@@ -1,12 +1,5 @@
 const mongoose = require("mongoose");
 
-const aiCommentSchema = new mongoose.Schema({
-  repoName: { type: String, required: true },
-  pullRequestId: { type: String, required: true },
-  comment: { type: String, required: true },
-  createdAt: { type: Date, default: Date.now },
-});
-
 const userSchema = new mongoose.Schema(
   {
     githubId: { type: String, required: true, unique: true },
@@ -16,8 +9,15 @@ const userSchema = new mongoose.Schema(
     htmlUrl: { type: String },
     publicRepos: { type: Number },
     token: { type: String },
-    aiComments: [aiCommentSchema],
+    repository: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Repository",
+      },
+    ],
     profileUrl: { type: String },
+    followers: { type: Number },
+    following: { type: Number },
   },
   { timestamps: true }
 );

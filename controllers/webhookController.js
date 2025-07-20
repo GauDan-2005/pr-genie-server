@@ -1,33 +1,92 @@
 const axios = require("axios");
 const User = require("../db/models/user");
 const { generateSummary } = require("../services/gemeni");
+const comment = require("../db/models/comment");
+const Repository = require("../db/models/Repository");
 
 const webHookeControllers = {
+  // Get webhook status for a repository
+  getWebhookStatus: async (req, res) => {
+    const { repoId } = req.params;
+    const user = await User.findById(req.user);
+    
+    try {
+      const repository = await Repository.findOne({ repoId: repoId });
+      
+      if (!repository || !repository.webhookId) {
+        return res.json({ active: false, webhookId: null });
+      }
+
+      // Verify webhook still exists on GitHub
+      try {
+        const response = await axios.get(
+          `https://api.github.com/repos/${user.username}/${repository.repoName}/hooks/${repository.webhookId}`,
+          {
+            headers: { Authorization: `Bearer ${user.token}` },
+          }
+        );
+        
+        res.json({ 
+          active: response.data.active, 
+          webhookId: repository.webhookId,
+          config: response.data.config 
+        });
+      } catch (githubError) {
+        // Webhook doesn't exist on GitHub anymore, clean up database
+        repository.webhookId = null;
+        await repository.save();
+        res.json({ active: false, webhookId: null });
+      }
+    } catch (error) {
+      console.error("Error checking webhook status:", error);
+      res.status(500).json({ message: "Error checking webhook status" });
+    }
+  },
   // Create a webhook for a repository to track pull requests
   createWebhook: async (req, res) => {
     const { repo } = req.body;
+    console.log(repo);
     const user = await User.findById(req.user);
 
     console.log(
-      `Creating webhook for repo: ${repo} with owner: ${user.username}`
+      `Creating webhook for repo: ${repo.name} with owner: ${user.username}`
     );
 
     try {
       const response = await axios.post(
-        `https://api.github.com/repos/${user.username}/${repo}/hooks`,
+        `https://api.github.com/repos/${user.username}/${repo.name}/hooks`,
         {
           name: "web",
           config: {
             url: `${process.env.SERVER_URL}/webhooks/pull-request`,
             content_type: "json",
           },
-          events: ["pull_request"], // This subscribes to pull request events
+          events: ["pull_request", "pull_request_review_comment"], // This subscribes to pull request events
           active: true,
         },
         {
           headers: { Authorization: `Bearer ${user.token}` },
         }
       );
+
+      const repoDB = await Repository.findOne({ repoId: Repository.id });
+      if (repoDB) {
+        repoDB.webhookId = response.data.id;
+        await repoDB.save();
+      } else {
+        const newRepo = new Repository({
+          repoName: repo.name,
+          repoId: repo.id,
+          repoUrl: repo.html_url,
+          comment: [],
+          webhookId: response.data.id,
+        });
+        await newRepo.save();
+        user.repository.push(newRepo);
+        await user.save();
+      }
+
+      console.log("Webhook created successfully");
 
       res.json({
         message: "Webhook created successfully",
@@ -44,13 +103,64 @@ const webHookeControllers = {
     }
   },
 
+  // delete a webhook for a repository
+  deleteWebhook: async (req, res) => {
+    const { repo } = req.body;
+    const user = await User.findById(req.user);
+    // Find the repository in the database
+    const repository = await Repository.findOne({
+      repoId: repo.id,
+    });
+
+    if (!repository) {
+      return res
+        .status(404)
+        .json({ message: "No webhooks found in this Repository." });
+    }
+
+    console.log(
+      `Deleting webhook for repo: ${repo.name} with hook ID: ${repository.webhookId}`
+    );
+
+    try {
+      // Send a DELETE request to GitHub API to remove the webhook
+      const response = await axios.delete(
+        `https://api.github.com/repos/${user.username}/${repository.repoName}/hooks/${repository.webhookId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+          },
+        }
+      );
+
+      console.log("Webhook deleted successfully from GitHub:", response.data);
+
+      // Remove the webhook ID from the repository in the database
+      repository.webhookId = null;
+      await repository.save();
+
+      res.json({
+        message: "Webhook deleted successfully from GitHub and database",
+      });
+    } catch (err) {
+      console.error(
+        "Error deleting webhook:",
+        err.response?.data || err.message
+      );
+      res.status(500).json({
+        message: err.response?.data?.message || "Error deleting webhook",
+      });
+    }
+  },
+
   // Handle pull request webhook events
   handlePullRequest: async (req, res) => {
     const { action, pull_request, repository } = req.body;
-
+    console.log("Repo:", repository);
+    console.log("Pull-Request:", pull_request);
+    console.log("action:", action);
     try {
       if (action === "opened") {
-        console.log(repository);
         const username = repository.owner.login;
         const user = await User.findOne({ username });
 
@@ -107,15 +217,31 @@ const webHookeControllers = {
           }
         );
 
-        // Save the comment details in the user's aiComments array
-        user.aiComments.push({
-          repoName: repository.full_name,
+        // Save the comment details in the comment schema file
+        const aiComment = new comment({
+          branch: "master",
           pullRequestId: pull_request.id,
-          comment: "AI Comment sent",
+          comment: `AI Comment sent:\nPR-Genie Summary:\n${summaryText}`,
         });
 
+        await aiComment.save();
+
+        // add the comment to the repository
+        const repo = await Repository.findOne({ repoId: repository.id });
+        if (repo) {
+          repo.comment.push(aiComment);
+          await repo.save();
+        } else {
+          res.status(500).send("Repository not found");
+        }
+
+        // user.aiComments.push({
+        //   repoName: repository.full_name,
+        //   pullRequestId: pull_request.id,
+        //   comment: "AI Comment sent:\n`PR-Genie Summary:\n${summaryText}`",
+        // });
+
         // Save the updated user data to the database
-        await user.save();
       }
 
       res.status(200).send("Pull request handled");

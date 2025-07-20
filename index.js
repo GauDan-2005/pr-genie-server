@@ -52,6 +52,8 @@ app.use((req, res, next) => {
 app.use("/auth", require("./routes/auth"));
 app.use("/webhooks", require("./routes/webhook"));
 app.use("/user", require("./routes/user"));
+app.use("/repositories", require("./routes/repositories"));
+app.use("/ai-comments", require("./routes/comments"));
 
 // Start the server
 const PORT = process.env.PORT || 5000;

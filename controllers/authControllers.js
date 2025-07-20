@@ -4,6 +4,8 @@ const JWTService = require("../utils/jwt");
 const authControllers = {
   register: async (accessToken, profile, done) => {
     try {
+      console.log(profile);
+
       // Check if user already exists
       let user = await User.findOne({ githubId: profile.id });
       if (!user) {
@@ -15,10 +17,21 @@ const authControllers = {
           avatarUrl: profile.photos[0].value,
           profileUrl: profile.profileUrl,
           publicRepos: profile._json.public_repos,
+          followers: profile._json.followers,
+          following: profile._json.following,
         });
         await user.save();
       } else {
+        user.githubId = profile.id;
+        user.username = profile.username;
         user.token = accessToken;
+        user.name = profile.displayName;
+        user.avatarUrl = profile.photos[0].value;
+        user.profileUrl = profile.profileUrl;
+        user.publicRepos = profile._json.public_repos;
+        user.followers = profile._json.followers;
+        user.following = profile._json.following;
+
         await user.save();
       }
       const token = JWTService.generateToken({ userId: user._id });
